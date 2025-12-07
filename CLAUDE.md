@@ -1,6 +1,114 @@
-# Claude Code Rules
+# CLAUDE.md
 
-This file is generated during init for the selected agent.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is a CLI Todo Application built with Python 3.13+ using only the standard library (no external dependencies except pytest for testing). The application stores tasks in-memory with no persistence.
+
+## Development Commands
+
+### Running the Application
+```bash
+cd todo-cli
+uv run todo
+```
+
+### Testing
+```bash
+# Run all tests
+cd todo-cli
+uv run pytest
+
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/unit/test_models.py
+uv run pytest tests/unit/test_manager.py
+uv run pytest tests/unit/test_ui.py
+
+# Run specific test type
+uv run pytest tests/unit/          # Unit tests
+uv run pytest tests/integration/   # Integration tests
+uv run pytest tests/contract/      # Contract tests
+```
+
+### Managing Dependencies
+```bash
+# Install dev dependencies (pytest)
+cd todo-cli
+uv add --dev pytest
+```
+
+## Architecture
+
+The application follows a clean layered architecture with clear separation of concerns:
+
+### Core Layers
+
+1. **Models Layer** (`src/todo/models.py`)
+   - `Task` dataclass: Immutable task representation with validation in `__post_init__`
+   - `Priority` enum: HIGH, MEDIUM, LOW
+   - All validation happens at model initialization
+   - Tasks use auto-incrementing integer IDs (never reused)
+
+2. **Manager Layer** (`src/todo/manager.py`)
+   - `TaskManager` class: Central business logic for task operations
+   - Maintains in-memory task list (`_tasks: list[Task]`)
+   - Manages ID allocation (`_next_id: int`)
+   - All mutations create new Task instances (dataclasses are immutable)
+   - Methods: `add_task()`, `get_task_by_id()`, `get_all_tasks()`, `update_task()`, `delete_task()`, `toggle_complete()`, `set_priority()`
+
+3. **UI Layer** (`src/todo/ui.py`)
+   - `ConsoleUI` class: Interactive console menu interface
+   - Handles user input, displays tasks with color coding (green for completed)
+   - Menu-driven workflow: Add, View, Update, Delete, Complete, Set Priority, Exit
+   - Input validation and error messaging
+
+4. **Application Entry Point** (`src/todo/main.py`)
+   - `main()` function: Initializes TaskManager and ConsoleUI, starts event loop
+
+### Key Design Patterns
+
+- **Immutability**: Tasks are dataclasses; updates create new instances
+- **Single Responsibility**: Each layer has one clear purpose
+- **Dependency Injection**: UI receives TaskManager instance
+- **TDD**: All code developed test-first (Red-Green-Refactor)
+
+### Test Organization
+
+```
+tests/
+├── unit/              # Isolated component tests
+│   ├── test_models.py    # Task and Priority validation
+│   ├── test_manager.py   # Business logic
+│   └── test_ui.py        # UI behavior (mocked I/O)
+├── integration/       # Multi-component tests
+│   └── test_app_flow.py  # End-to-end workflows
+└── contract/          # Interface compliance tests
+    └── test_manager_contract.py
+```
+
+## Important Constraints
+
+1. **No External Dependencies**: Only Python 3.13+ standard library (pytest is dev-only)
+2. **No Persistence**: Tasks lost on application exit
+3. **In-Memory Storage**: All tasks stored in Python list
+4. **Immutable Tasks**: Task updates require creating new instances
+5. **ID Allocation**: IDs auto-increment and are never reused
+
+## Code Conventions
+
+- Follow project constitution in `.specify/memory/constitution.md`
+- TDD approach: Write tests first, implement minimal code, refactor
+- Type hints on all function signatures
+- Docstrings for all public classes and methods
+- Validation at model layer (Task.__post_init__)
+
+---
+
+# Spec-Driven Development (SDD) Framework
 
 You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architext to build products.
 
@@ -208,3 +316,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.13+ + None (standard library only; pytest for testing) (001-cli-todo-app)
+- In-memory Python list (no database, no file I/O, no persistence) (001-cli-todo-app)
+
+## Recent Changes
+- 001-cli-todo-app: Added Python 3.13+ + None (standard library only; pytest for testing)
